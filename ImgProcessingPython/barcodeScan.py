@@ -38,7 +38,7 @@ for i in range(width):
         linesInfo[j][0] = BorW[0]; linesInfo[j][1] = i
         j = j + 1
 
-pp.pprint(linesInfo)
+pp.pprint(linesInfo) 
 
 
 
