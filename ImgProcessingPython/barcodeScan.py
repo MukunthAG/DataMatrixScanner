@@ -1,42 +1,65 @@
-from matplotlib import pyplot as plt
+from matplotlib import lines, pyplot as plt
 from matplotlib import image as pltImg
 import numpy as np
 import pprint as pp
 
-def toBinaryImage(data, h, w):
-    for i in range(h):
-        for j in range(w):
-            pix = data[i][j]
-            if (pix[0]/3 + pix[1]/3 + pix[2]/3 >= 127.5):
-                data[i][j] = [255, 255, 255]
-            else:
-                data[i][j] = [0, 0, 0]
- 
-original = pltImg.imread('barImgs/bar1.jpg') # Original Image(as a numPy N-D array) which we can't overwrite
-#plt.figure(1); plt.imshow(original) # Plot it in a graph
+def getLineInfo(imgPath, rowToScan):
+    def toBinaryImage(data, h, w):
+        for i in range(h):
+            for j in range(w):
+                pix = data[i][j]
+                if (pix[0]/3 + pix[1]/3 + pix[2]/3 >= 127.5):
+                    data[i][j] = [255, 255, 255]
+                else:
+                    data[i][j] = [0, 0, 0]
+    
+    ORIGINAL = pltImg.imread(imgPath) 
+    data = ORIGINAL.copy() 
+    height, width, mode = data.shape
+    lineInfo = []
+    if (mode == 3):
+        toBinaryImage(data, height, width) 
+        B = [0, 0, 0] 
+        W = [255, 255, 255]
+        underScan = W 
+        #plt.figure(1)
+        plt.subplot(1, 2, 1)
+        plt.title("Working Image")
+        for i in range(width):
+            BorW = data[rowToScan][i]
+            if (BorW[0] != underScan[0]):
+                if (BorW[0] == B[0]):
+                    lineInfo.append(['B', i])
+                if (BorW[0] == W[0]):
+                    lineInfo.append(['W', i])
+                plt.plot([i, i], [0, height], linewidth = 1)
+                underScan = BorW
 
-data = original.copy() # Writable copy of our Image
+        print("Data with index(coloumns)")
+        pp.pprint(lineInfo)
+        for i in range(len(lineInfo) - 1): 
+            lineInfo[i][1] = lineInfo[i + 1][1]  - lineInfo[i][1]
 
-height, width, mode = data.shape # Get the width height and mode(RGB-->3-D numPy array) of our Image
+        lineInfo.pop()
+        print("Data with length of each stripe")
+        pp.pprint(lineInfo)
 
-toBinaryImage(data, height, width) # Convert it purely to black and white, depending on its darkness
-print(width)
-# Assuming that our matrix is in perfect 2D shape and ready for horizontal scan, we do the following steps
-B = [0, 0, 0]; W = [255, 255, 255]; MAX_DIVS = width
-rowToScan = 125 
-lineInfo = []
-underScan = W 
-plt.figure(2)
-for i in range(width):
-    BorW = data[rowToScan][i]
-    if (BorW[0] != underScan[0]):
-        if (BorW[0] == B[0]):
-            lineInfo.append(['B', i - 1])
-        if (BorW[0] == W[0]):
-            lineInfo.append(['W', i - 1])
-        plt.plot([i - 1, i - 1], [0, height])
-        underScan = BorW
+        sum = 0
+        for line in lineInfo:
+            sum += line[1]
+        
+        unitLineLength = lineInfo[0][1]
+        print(sum, sum/unitLineLength)
+        plt.imshow(data)
+        plt.subplot(1, 2, 2)
+        plt.title("Original")
+        plt.imshow(ORIGINAL)
+    else: 
+        print("Image mode incompatible") 
 
-pp.pprint(lineInfo)
-plt.imshow(data)
+    return lineInfo
+    
+
+lineInfo = getLineInfo('barImgs/bar6.jpg', 75)
+
 plt.show()
